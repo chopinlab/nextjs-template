@@ -63,5 +63,8 @@ BEGIN
 END;
 $$;
 
+-- 테이블이 생성되면 자동으로 하이퍼테이블 변환
+-- 수동 실행: SELECT auto_create_hypertables();
+
 -- 초기화 완료 메시지
-SELECT 'TimescaleDB extension loaded. Run create_hypertables() after Prisma migration.' as status;
+SELECT 'TimescaleDB extension loaded. Tables will auto-convert to hypertables when created.' as status;

@@ -8,7 +8,7 @@ import type { ActionState } from '@/types/actions'
 // 시계열 데이터 생성
 export async function createTimeSeriesData(prevState: ActionState, formData: FormData): Promise<ActionState> {
   try {
-    const metric = formData.get('metric') as strin
+    const metric = formData.get('metric') as string
     const value = formData.get('value') as string
     const tags = formData.get('tags') as string
 
@@ -16,11 +16,21 @@ export async function createTimeSeriesData(prevState: ActionState, formData: For
       return { success: false, error: 'metric과 value는 필수입니다' }
     }
 
+    // JSON 파싱 처리
+    let parsedTags = null
+    if (tags) {
+      try {
+        parsedTags = JSON.parse(tags)
+      } catch (error) {
+        return { success: false, error: '태그 JSON 형식이 올바르지 않습니다' }
+      }
+    }
+
     const result = await prisma.timeSeriesData.create({
       data: {
         metric,
         value: parseFloat(value),
-        tags: tags || null,
+        tags: parsedTags,
       },
     })
 
