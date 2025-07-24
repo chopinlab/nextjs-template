@@ -7,43 +7,45 @@ generator client {
 }
 
 datasource db {
-  provider = "sqlite"
+  provider = "postgresql"
   url      = env("DATABASE_URL")
 }
 
-// Example time-series model (SQLite version)
+// TimescaleDB 시계열 데이터 모델 (복합 키 사용)
 model TimeSeriesData {
-  id        String   @id @default(cuid())
-  timestamp DateTime @default(now())
-  metric    String
+  id        String   @default(cuid())
+  timestamp DateTime @default(now()) @db.Timestamptz(6)
+  metric    String   @db.VarChar(255)
   value     Float
-  tags      String?  // JSON string for SQLite
+  tags      Json?    // PostgreSQL JSON 타입
   
+  @@id([id, timestamp])  // 복합 Primary Key
   @@index([timestamp, metric])
   @@map("time_series_data")
 }
 
-// User model example
+// 사용자 모델
 model User {
   id        String   @id @default(cuid())
-  email     String   @unique
-  name      String?
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  email     String   @unique @db.VarChar(255)
+  name      String?  @db.VarChar(255)
+  createdAt DateTime @default(now()) @db.Timestamptz(6)
+  updatedAt DateTime @updatedAt @db.Timestamptz(6)
   
   @@map("users")
 }
 
-// Example sensor data model
+// 센서 데이터 모델 (TimescaleDB 최적화)
 model SensorData {
-  id          String   @id @default(cuid())
-  sensorId    String
-  timestamp   DateTime @default(now())
+  id          String   @default(cuid())
+  sensorId    String   @db.VarChar(100)
+  timestamp   DateTime @default(now()) @db.Timestamptz(6)
   temperature Float?
   humidity    Float?
   pressure    Float?
-  location    String?
+  location    String?  @db.VarChar(255)
   
+  @@id([id, timestamp])  // 복합 Primary Key
   @@index([sensorId, timestamp])
   @@index([timestamp])
   @@map("sensor_data")

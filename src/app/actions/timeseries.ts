@@ -8,7 +8,7 @@ import type { ActionState } from '@/types/actions'
 // 시계열 데이터 생성
 export async function createTimeSeriesData(prevState: ActionState, formData: FormData): Promise<ActionState> {
   try {
-    const metric = formData.get('metric') as string
+    const metric = formData.get('metric') as strin
     const value = formData.get('value') as string
     const tags = formData.get('tags') as string
 

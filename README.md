@@ -78,38 +78,18 @@ npm run dev
 
 ## 🗄️ 로컬 개발 환경 설정
 
-### 1. 빠른 시작 (SQLite) - 권장
-현재 SQLite를 사용하여 **추가 설치 없이** 바로 시작할 수 있습니다.
-
-```bash
-# 이미 설정됨 - 추가 설정 불필요
-DATABASE_URL="file:./dev.db"
-
-# 바로 시작
-npm run dev
-```
-
-### 2. 실제 인프라 환경 (Docker) - 운영 환경과 동일
+### 1. TimescaleDB 환경 (Docker) - 기본 설정
 
 #### Docker Compose로 PostgreSQL + Redis 실행
 ```bash
-# 인프라 시작 (백그라운드 실행)
+# 1. TimescaleDB 시작
 docker-compose up -d
 
-# 환경 변수 복사
-cp .env.docker .env
+# 2. 마이그레이션 실행 (테이블 생성 + 자동 하이퍼테이블 변환)
+npx prisma migrate dev --name init
 
-# 데이터베이스 스키마 변경 (PostgreSQL용)  
-# prisma/schema.prisma에서 provider를 "postgresql"로 변경
-
-# 마이그레이션 실행
-npx prisma migrate dev --name switch-to-postgresql
-
-# 개발 서버 시작
+# 3. 개발 서버 시작
 npm run dev
-
-# TimescaleDB 하이퍼테이블 생성 (마이그레이션 후 한 번만)
-docker-compose exec timescaledb psql -U dev -d nextjs_dev -c "SELECT create_hypertables();"
 ```
 
 #### 포함된 서비스들
