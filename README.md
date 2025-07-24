@@ -78,18 +78,49 @@ npm run dev
 
 ## 🗄️ 로컬 개발 환경 설정
 
-### 1. TimescaleDB 환경 (Docker) - 기본 설정
+### 1. TimescaleDB 환경 (Docker) - 시계열 데이터 최적화
 
-#### Docker Compose로 PostgreSQL + Redis 실행
+#### Docker Compose로 TimescaleDB 실행
 ```bash
-# 1. TimescaleDB 시작
+# 1. TimescaleDB 컨테이너 시작
 docker-compose up -d
 
-# 2. 마이그레이션 실행 (테이블 생성 + 자동 하이퍼테이블 변환)
+# 2. Prisma 마이그레이션 (일반 PostgreSQL 테이블 생성)
 npx prisma migrate dev --name init
 
-# 3. 개발 서버 시작
+# 3. TimescaleDB 하이퍼테이블 변환 (시계열 최적화)
+docker exec nextjs-template-timescaledb-1 psql -U admin -d nextjs_dev -c "SELECT create_hypertables_manual();"
+
+# 4. 개발 서버 시작
 npm run dev
+```
+
+#### 🎯 새로운 시계열 테이블 추가하기
+
+1. **Prisma 스키마에 모델 추가** (`prisma/schema.prisma`)
+```prisma
+model NewMetricsData {
+  id        String   @default(cuid())
+  timestamp DateTime @default(now()) @db.Timestamptz(6)
+  // 다른 필드들...
+  
+  @@id([id, timestamp])  // TimescaleDB용 복합 키 필수!
+  @@map("new_metrics_data")
+}
+```
+
+2. **하이퍼테이블 목록에 추가** (`docker/init-timescaledb.sql` line 12)
+```sql
+table_names TEXT[] := ARRAY['time_series_data', 'sensor_data', 'new_metrics_data'];
+```
+
+3. **마이그레이션 및 하이퍼테이블 변환**
+```bash
+# 테이블 생성
+npx prisma migrate dev --name add-new-metrics
+
+# 하이퍼테이블 변환
+docker exec nextjs-template-timescaledb-1 psql -U admin -d nextjs_dev -c "SELECT create_hypertables_manual();"
 ```
 
 #### 포함된 서비스들
@@ -113,7 +144,25 @@ docker-compose logs timescaledb
 docker-compose logs redis
 
 # TimescaleDB 접속 (디버깅/쿼리 테스트용)
-docker-compose exec timescaledb psql -U dev -d nextjs_dev
+docker exec nextjs-template-timescaledb-1 psql -U admin -d nextjs_dev
+```
+
+#### TimescaleDB 관리 명령어
+```sql
+-- 하이퍼테이블 상태 확인
+SELECT * FROM timescaledb_information.hypertables;
+
+-- 모든 시계열 테이블을 하이퍼테이블로 변환
+SELECT create_hypertables_manual();
+
+-- 개별 테이블을 하이퍼테이블로 변환
+SELECT convert_to_hypertable('table_name');
+
+-- 다른 시간 컬럼 사용하여 변환
+SELECT convert_to_hypertable('logs_table', 'created_at');
+
+-- 하이퍼테이블 청크(파티션) 확인
+SELECT * FROM timescaledb_information.chunks;
 ```
 
 ### 3. 클라우드 개발 DB (팀 개발용)
