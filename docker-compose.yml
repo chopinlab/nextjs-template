@@ -27,30 +27,11 @@ services:
       -c work_mem=4MB
     restart: unless-stopped
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U dev -d nextjs_dev"]
+      test: ["CMD-SHELL", "pg_isready -U admin -d nextjs_dev"]
       interval: 30s
       timeout: 10s
       retries: 3
 
-  # Redis (나중에 필요할 때 활성화)
-  # redis:
-  #   image: redis:7-alpine
-  #   ports:
-  #     - "6379:6379"
-  #   volumes:
-  #     - redis_data:/data
-  #   restart: unless-stopped
-
-  # Prisma Studio (옵션)
-  # prisma-studio:
-  #   image: node:18-alpine
-  #   working_dir: /app
-  #   volumes:
-  #     - .:/app
-  #   ports:
-  #     - "5555:5555"
-  #   command: npx prisma studio
 
 volumes:
   timescaledb_data:
-  # redis_data:
