@@ -1,6 +1,7 @@
 'use client'
 
-import { useFormStatus, useFormState } from 'react-dom'
+import { useFormStatus } from 'react-dom'
+import { useActionState } from 'react'
 import { createSensorData } from '../actions/timeseries'
 import type { ActionState } from '@/types/actions'
 
@@ -21,7 +22,7 @@ function SubmitButton() {
 const initialState: ActionState = { success: false }
 
 export default function SensorForm() {
-  const [state, formAction] = useFormState(createSensorData, initialState)
+  const [state, formAction] = useActionState(createSensorData, initialState)
   
   return (
     <div>
