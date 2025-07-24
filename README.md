@@ -140,6 +140,49 @@ npm run start
 npm run lint
 ```
 
+### 디버깅 가이드
+
+#### Server Actions 디버깅 (서버 사이드)
+```typescript
+// ✅ 터미널 로그 출력
+'use server'
+export async function createTimeSeriesData() {
+  console.log('📊 서버에서 실행:', { metric, value })
+  // VS Code 브레이크포인트도 기본 dev 모드에서 작동
+}
+```
+
+- **터미널에서 확인**: `npm run dev` 실행 후 터미널에서 로그 확인
+- **VS Code 디버깅**: 코드 라인 번호 왼쪽 클릭으로 브레이크포인트 설정
+- **NPM Scripts 패널**: VS Code Explorer에서 직접 실행 및 디버깅 가능
+
+#### 클라이언트 컴포넌트 디버깅 (브라우저)
+```typescript
+// ✅ 브라우저 콘솔 출력
+'use client'
+export default function SensorForm() {
+  console.log('🖥️ 브라우저에서 실행:', state)
+  // 브라우저 DevTools Sources에서 디버깅 가능
+}
+```
+
+- **브라우저 DevTools**: F12 → Sources/Console 탭에서 확인
+- **React DevTools**: 컴포넌트 상태 실시간 모니터링
+
+#### 고급 디버깅 (필요시)
+```json
+// package.json에 추가 (선택사항)
+{
+  "scripts": {
+    "debug": "NODE_OPTIONS=--inspect next dev --turbo"
+  }
+}
+```
+
+- **VS Code 고급 디버깅**: Run and Debug 패널에서 "Attach to Node Process" 선택
+- **Chrome DevTools**: `chrome://inspect`에서 Remote Target 연결
+- **주의**: Server Actions는 브라우저에서 소스 보기 불가 (보안상 정상)
+
 ## 💻 Server Actions 사용법
 
 ### 기본 폼 구조 (`useFormState` + `useFormStatus`)
