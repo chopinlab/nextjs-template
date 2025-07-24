@@ -22,7 +22,11 @@
   },
   "homepage": "https://github.com/chopinlab/nextjs-template#readme",
   "dependencies": {
+    "@prisma/client": "^6.12.0",
+    "@types/pg": "^8.15.4",
     "next": "^15.4.3",
+    "pg": "^8.16.3",
+    "prisma": "^6.12.0",
     "react": "^19.1.0",
     "react-dom": "^19.1.0"
   },

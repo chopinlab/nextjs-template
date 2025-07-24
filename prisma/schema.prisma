@@ -1,0 +1,50 @@
+// This is your Prisma schema file for TimescaleDB
+// TimescaleDB is PostgreSQL-compatible with time-series extensions
+
+generator client {
+  provider = "prisma-client-js"
+  output   = "../generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// Example time-series model for TimescaleDB
+model TimeSeriesData {
+  id        String   @id @default(cuid())
+  timestamp DateTime @default(now()) @db.Timestamptz(6)
+  metric    String   @db.VarChar(255)
+  value     Float
+  tags      Json?    // JSON field for additional metadata
+  
+  @@index([timestamp, metric])
+  @@map("time_series_data")
+}
+
+// User model example
+model User {
+  id        String   @id @default(cuid())
+  email     String   @unique
+  name      String?
+  createdAt DateTime @default(now()) @db.Timestamptz(6)
+  updatedAt DateTime @updatedAt @db.Timestamptz(6)
+  
+  @@map("users")
+}
+
+// Example sensor data model
+model SensorData {
+  id          String   @id @default(cuid())
+  sensorId    String   @db.VarChar(100)
+  timestamp   DateTime @default(now()) @db.Timestamptz(6)
+  temperature Float?
+  humidity    Float?
+  pressure    Float?
+  location    String?  @db.VarChar(255)
+  
+  @@index([sensorId, timestamp])
+  @@index([timestamp])
+  @@map("sensor_data")
+}

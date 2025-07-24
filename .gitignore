@@ -7,8 +7,6 @@ node_modules/
 /coverage
 
 # Next.js
-/.next/
-.next
 .next/
 /out/
 
@@ -25,6 +23,7 @@ yarn-debug.log*
 yarn-error.log*
 
 # Local env files
+.env
 .env*.local
 
 # Vercel
@@ -33,3 +32,4 @@ yarn-error.log*
 # TypeScript
 *.tsbuildinfo
 next-env.d.ts
+/generated/prisma
