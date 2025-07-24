@@ -7,17 +7,17 @@ generator client {
 }
 
 datasource db {
-  provider = "postgresql"
+  provider = "sqlite"
   url      = env("DATABASE_URL")
 }
 
-// Example time-series model for TimescaleDB
+// Example time-series model (SQLite version)
 model TimeSeriesData {
   id        String   @id @default(cuid())
-  timestamp DateTime @default(now()) @db.Timestamptz(6)
-  metric    String   @db.VarChar(255)
+  timestamp DateTime @default(now())
+  metric    String
   value     Float
-  tags      Json?    // JSON field for additional metadata
+  tags      String?  // JSON string for SQLite
   
   @@index([timestamp, metric])
   @@map("time_series_data")
@@ -28,8 +28,8 @@ model User {
   id        String   @id @default(cuid())
   email     String   @unique
   name      String?
-  createdAt DateTime @default(now()) @db.Timestamptz(6)
-  updatedAt DateTime @updatedAt @db.Timestamptz(6)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
   
   @@map("users")
 }
@@ -37,12 +37,12 @@ model User {
 // Example sensor data model
 model SensorData {
   id          String   @id @default(cuid())
-  sensorId    String   @db.VarChar(100)
-  timestamp   DateTime @default(now()) @db.Timestamptz(6)
+  sensorId    String
+  timestamp   DateTime @default(now())
   temperature Float?
   humidity    Float?
   pressure    Float?
-  location    String?  @db.VarChar(255)
+  location    String?
   
   @@index([sensorId, timestamp])
   @@index([timestamp])
