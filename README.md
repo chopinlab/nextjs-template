@@ -76,34 +76,86 @@ npm run dev
 - Tailwind CSS 스타일링
 - Prisma Studio UI 지원
 
-## 🗄️ 데이터베이스 설정
+## 🗄️ 로컬 개발 환경 설정
 
-### 개발 환경 (SQLite)
-현재 SQLite를 사용하여 바로 시작할 수 있습니다.
+### 1. 빠른 시작 (SQLite) - 권장
+현재 SQLite를 사용하여 **추가 설치 없이** 바로 시작할 수 있습니다.
 
 ```bash
 # 이미 설정됨 - 추가 설정 불필요
 DATABASE_URL="file:./dev.db"
+
+# 바로 시작
+npm run dev
 ```
 
-### 운영 환경 (TimescaleDB/PostgreSQL)
-1. `.env` 파일에서 `DATABASE_URL` 수정:
-```env
-DATABASE_URL="postgresql://username:password@localhost:5432/database_name"
-```
+### 2. 실제 인프라 환경 (Docker) - 운영 환경과 동일
 
-2. `prisma/schema.prisma`에서 provider 변경:
-```prisma
-datasource db {
-  provider = "postgresql"  // sqlite → postgresql
-  url      = env("DATABASE_URL")
-}
-```
-
-3. 스키마를 PostgreSQL 호환으로 수정 후 마이그레이션:
+#### Docker Compose로 PostgreSQL + Redis 실행
 ```bash
+# 인프라 시작 (백그라운드 실행)
+docker-compose up -d
+
+# 환경 변수 복사
+cp .env.docker .env
+
+# 데이터베이스 스키마 변경 (PostgreSQL용)  
+# prisma/schema.prisma에서 provider를 "postgresql"로 변경
+
+# 마이그레이션 실행
 npx prisma migrate dev --name switch-to-postgresql
+
+# 개발 서버 시작
+npm run dev
+
+# TimescaleDB 하이퍼테이블 생성 (마이그레이션 후 한 번만)
+docker-compose exec timescaledb psql -U dev -d nextjs_dev -c "SELECT create_hypertables();"
 ```
+
+#### 포함된 서비스들
+- **TimescaleDB**: PostgreSQL + 시계열 확장
+- **Redis**: 캐싱 및 세션 스토리지
+- **자동 데이터 영속화**: 재시작해도 데이터 유지
+
+#### 인프라 관리 명령어
+```bash
+# 서비스 시작
+docker-compose up -d
+
+# 서비스 중지
+docker-compose down
+
+# 데이터까지 완전 삭제
+docker-compose down -v
+
+# 로그 확인
+docker-compose logs timescaledb
+docker-compose logs redis
+
+# TimescaleDB 접속 (디버깅/쿼리 테스트용)
+docker-compose exec timescaledb psql -U dev -d nextjs_dev
+```
+
+### 3. 클라우드 개발 DB (팀 개발용)
+```env
+# .env - 클라우드 서비스 사용
+DATABASE_URL="postgresql://user:pass@db.supabase.co:5432/postgres"
+REDIS_URL="redis://default:pass@redis-xyz.upstash.io:6379"
+```
+
+**추천 서비스:**
+- **Supabase**: PostgreSQL + 실시간 기능
+- **Upstash**: 서버리스 Redis
+- **PlanetScale**: MySQL 호환 (서버리스)
+
+### 🤔 어떤 방식을 선택할까?
+
+| 상황 | 추천 방식 | 이유 |
+|------|-----------|------|
+| **혼자 개발** | SQLite | 간단, 빠른 시작 |
+| **팀 개발** | Docker Compose | 환경 통일, 쉬운 설정 |
+| **운영 환경 테스트** | Docker Compose | 실제 인프라와 동일 |
+| **빠른 프로토타입** | 클라우드 DB | 설치 없이 확장 가능 |
 
 ## 🛠️ 개발 도구
 

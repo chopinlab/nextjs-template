@@ -1,0 +1,56 @@
+version: '3.8'
+
+services:
+  # TimescaleDB (PostgreSQL + 시계열 확장)
+  timescaledb:
+    image: timescale/timescaledb:2.21.1-pg17
+    environment:
+      POSTGRES_DB: nextjs_dev
+      POSTGRES_USER: admin
+      POSTGRES_PASSWORD: admin
+      # TimescaleDB 최적화 설정
+      POSTGRES_INITDB_ARGS: "--data-checksums"
+      TS_TUNE_MEMORY: 2GB
+      TS_TUNE_NUM_CPUS: 2
+    ports:
+      - "5432:5432"
+    volumes:
+      - timescaledb_data:/var/lib/postgresql/data
+      # TimescaleDB 초기화 스크립트
+      - ./docker/init-timescaledb.sql:/docker-entrypoint-initdb.d/init-timescaledb.sql:ro
+    command: >
+      postgres
+      -c shared_preload_libraries=timescaledb
+      -c max_connections=200
+      -c shared_buffers=256MB
+      -c effective_cache_size=1GB
+      -c work_mem=4MB
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U dev -d nextjs_dev"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  # Redis (나중에 필요할 때 활성화)
+  # redis:
+  #   image: redis:7-alpine
+  #   ports:
+  #     - "6379:6379"
+  #   volumes:
+  #     - redis_data:/data
+  #   restart: unless-stopped
+
+  # Prisma Studio (옵션)
+  # prisma-studio:
+  #   image: node:18-alpine
+  #   working_dir: /app
+  #   volumes:
+  #     - .:/app
+  #   ports:
+  #     - "5555:5555"
+  #   command: npx prisma studio
+
+volumes:
+  timescaledb_data:
+  # redis_data:
