@@ -104,6 +104,25 @@ await initializeTimescaleDB()
 - **User**: 사용자 정보
 - **SensorData**: 센서 데이터 (온도, 습도, 압력 등)
 
+## Prisma 명령어
+
+```bash
+# 스키마 변경 후 마이그레이션
+npx prisma migrate dev --name your-migration-name
+
+# 클라이언트 재생성
+npx prisma generate
+
+# 데이터베이스 스키마 확인
+npx prisma db pull
+
+# 데이터베이스 초기화 (데이터 삭제됨!)
+npx prisma migrate reset
+
+# Prisma Studio (GUI) 실행
+npx prisma studio
+```
+
 ## TimescaleDB 쿼리 예시
 
 ```typescript
