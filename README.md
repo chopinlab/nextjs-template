@@ -61,7 +61,7 @@ export async function createData(
 ### 폼 컴포넌트 패턴
 ```typescript
 'use client'
-const [state, formAction] = useFormState(serverAction, initialState)
+const [state, formAction] = useActionState(serverAction, initialState)
 
 return (
   <form action={formAction}>
@@ -120,12 +120,10 @@ npm view <패키지명> dependencies  # 의존성 목록
 ```
 
 #### VS Code에서 빠르게 사용하기
-1. `package.json`에서 패키지명 선택 (더블클릭으로 단어 선택)
-2. `Cmd+Shift+P` → "Terminal: Run Selected Text in Active Terminal" 실행
-3. 터미널에 `npm view ` 입력 후 `Cmd+V`로 패키지명 붙여넣기
+1. View 메뉴에서 Open View... 메뉴 클릭
+2. npm 입력
+3. NPM Scripts 선택
 
-또는 VS Code 확장:
-- **NPM Intellisense**: package.json에서 패키지 정보 툴팁으로 바로 확인
 
 ## 💡 디버깅
 
