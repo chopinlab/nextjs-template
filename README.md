@@ -110,6 +110,23 @@ docker-compose down       # 서비스 중지
 docker-compose logs       # 로그 확인
 ```
 
+### NPM 패키지 정보 조회
+```bash
+npm view <패키지명>           # 패키지 전체 정보 확인
+npm view <패키지명> version   # 최신 버전 확인
+npm view <패키지명> versions  # 모든 버전 리스트
+npm view <패키지명> homepage  # 홈페이지 URL
+npm view <패키지명> dependencies  # 의존성 목록
+```
+
+#### VS Code에서 빠르게 사용하기
+1. `package.json`에서 패키지명 선택 (더블클릭으로 단어 선택)
+2. `Cmd+Shift+P` → "Terminal: Run Selected Text in Active Terminal" 실행
+3. 터미널에 `npm view ` 입력 후 `Cmd+V`로 패키지명 붙여넣기
+
+또는 VS Code 확장:
+- **NPM Intellisense**: package.json에서 패키지 정보 툴팁으로 바로 확인
+
 ## 💡 디버깅
 
 ### Server Actions (터미널)
