@@ -1,8 +1,78 @@
 'use server'
 
+import { cookies } from 'next/headers'
 import { revalidatePath } from 'next/cache'
 import { redirect } from 'next/navigation'
 import { ActionState } from '@/types/actions'
+
+/**
+ * 개발용 간단 로그인 액션
+ */
+export async function devLogin(
+  prevState: ActionState,
+  formData: FormData
+): Promise<ActionState> {
+  try {
+    const userId = formData.get('userId') as string
+    
+    if (!userId) {
+      return { success: false, error: '사용자 ID를 입력해주세요.' }
+    }
+    
+    // 유효한 사용자 ID 확인 (1, 2, 3만 허용)
+    if (!['1', '2', '3'].includes(userId)) {
+      return { success: false, error: '유효하지 않은 사용자 ID입니다. (1, 2, 3 중 선택)' }
+    }
+    
+    // 세션 토큰 설정
+    const cookieStore = await cookies()
+    cookieStore.set('session-token', userId, {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === 'production',
+      sameSite: 'lax',
+      maxAge: 60 * 60 * 24 * 7 // 7일
+    })
+    
+    revalidatePath('/')
+    redirect('/')
+    
+  } catch (error) {
+    console.error('로그인 실패:', error)
+    
+    // redirect 에러는 정상적인 흐름이므로 다시 throw
+    if (error instanceof Error && error.message.includes('NEXT_REDIRECT')) {
+      throw error
+    }
+    
+    return { success: false, error: '로그인 중 오류가 발생했습니다.' }
+  }
+}
+
+/**
+ * 로그아웃 액션
+ */
+export async function logoutAction(
+  prevState: ActionState,
+  formData: FormData
+): Promise<ActionState> {
+  try {
+    const cookieStore = await cookies()
+    cookieStore.delete('session-token')
+    
+    revalidatePath('/')
+    redirect('/')
+    
+  } catch (error) {
+    console.error('로그아웃 실패:', error)
+    
+    // redirect 에러는 정상적인 흐름이므로 다시 throw
+    if (error instanceof Error && error.message.includes('NEXT_REDIRECT')) {
+      throw error
+    }
+    
+    return { success: false, error: '로그아웃 중 오류가 발생했습니다.' }
+  }
+}
 
 export async function loginAction(
   prevState: ActionState,
