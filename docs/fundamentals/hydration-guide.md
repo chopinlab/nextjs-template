@@ -437,6 +437,211 @@ export const useUI = () => {
 }
 ```
 
+## 🔧 Webpack과 브라우저의 역할 분담
+
+### 하이드레이션 과정에서 누가 뭘 하는가?
+
+```typescript
+// 개발자가 작성한 코드
+import React, { useState } from 'react'
+import { useAppStore } from '@/lib/store'
+
+function MyComponent() {
+  const [count, setCount] = useState(0)
+  const theme = useAppStore(state => state.theme)
+  return <div onClick={() => setCount(c => c + 1)}>{count}</div>
+}
+```
+
+### **Webpack의 역할** (빌드 시):
+```javascript
+// 1. 의존성 분석 및 청크 분할
+Dependencies found:
+├── React → framework-abc123.js (182KB)
+├── Zustand → vendor-def456.js (50KB)  
+└── MyComponent → page-ghi789.js (5KB)
+
+// 2. 코드 압축 및 최적화
+// 3. import 문을 실제 코드 참조로 변환
+const useState = __webpack_require__("react").useState
+```
+
+### **브라우저의 역할** (런타임):
+```javascript
+// 1. HTML 먼저 표시 (정적)
+<div>0</div> // 클릭 안됨
+
+// 2. JS 청크들 다운로드 & 로딩
+framework.js → React.useState 메모리에 적재
+page.js → MyComponent 코드 로딩
+
+// 3. 하이드레이션 실행 (React가 담당)  
+ReactDOM.hydrateRoot(root, <MyComponent />)
+// → 기존 <div>에 onClick 이벤트 연결
+
+// 4. 완성!
+<div onClick={...}>0</div> // 이제 클릭 가능!
+```
+
+### 빌드 최적화 결과
+
+```
+🐌 개발 모드 (npm run dev):
+- 코드 압축 없음
+- 소스맵 포함  
+- Hot Reload 코드 포함
+- 총 크기: ~10MB
+
+⚡ 프로덕션 모드 (npm run build):
+- Tree Shaking (안 쓰는 코드 제거)
+- 코드 압축 & 난독화
+- 청크 분할 최적화
+- 총 크기: ~106KB (100배 감소!)
+```
+
 ---
 
-이 가이드를 통해 하이드레이션의 개념을 이해하고, 실무에서 발생하는 문제들을 예방하고 해결할 수 있을 것입니다. 하이드레이션은 SSR의 핵심이므로 꼭 숙지하시기 바랍니다!
+## 🗄️ 브라우저 캐시 vs 사용자 추적
+
+### 캐시: 성능을 위한 파일 저장
+
+```
+📂 브라우저 캐시 (도메인별 격리):
+├── google.com/cache/
+│   ├── search-framework.js
+│   └── maps-app.js
+├── facebook.com/cache/  
+│   ├── social-react.js
+│   └── chat-components.js
+└── our-site.com/cache/
+    ├── framework-abc123.js ← React 라이브러리
+    └── page-def456.js ← 우리 페이지 코드
+
+🔒 보안 원칙: 다른 도메인 캐시 접근 불가
+```
+
+### 로딩 시간 차이
+
+```
+🐌 첫 방문 (네트워크 다운로드):
+- React framework: 182KB → 200-500ms
+- 페이지 코드: 16KB → 50-100ms
+
+⚡ 재방문 (캐시에서 로딩):  
+- React framework: 캐시 → 1-5ms
+- 페이지 코드: 캐시 → 1-2ms
+
+결과: 약 100배 속도 향상! 🚀
+```
+
+### 추적: 사용자 행동 분석
+
+```javascript
+// 🕷️ 크로스 도메인 추적 메커니즘
+
+// 1. A 쇼핑몰에서:
+<script src="https://google-analytics.com/analytics.js"></script>
+<img src="https://google-analytics.com/collect?user_id=123&page=shoes">
+// → google.com 쿠키에 기록: user_id=123, interests=["shoes"]
+
+// 2. B 뉴스사이트에서:  
+<script src="https://google-analytics.com/analytics.js"></script>
+<img src="https://google-analytics.com/collect?user_id=123&page=tech-news">
+// → 동일한 google.com 쿠키 업데이트: interests=["shoes", "tech"]
+
+// 3. C 여행사이트에서:
+// → Google: "user_123은 신발, 기술에 관심있음" → 맞춤 광고 노출
+```
+
+### 핵심 차이점
+
+| 구분 | 캐시 | 추적 |
+|------|------|------|
+| **목적** | 성능 최적화 | 사용자 분석 |
+| **저장 내용** | JS/CSS 파일 | 행동 패턴 |
+| **도메인 접근** | 격리됨 | 연결됨 |
+| **사용자 영향** | 빠른 로딩 | 개인정보 수집 |
+
+---
+
+## 🛡️ CORS와 추적 방지의 차이
+
+### CORS의 실제 목적
+
+```javascript
+// ❌ CORS가 막는 악성 공격
+// evil-site.com에서:
+fetch('https://your-bank.com/api/transfer', {
+  method: 'POST',
+  body: JSON.stringify({ to: 'hacker', amount: 1000000 }),
+  credentials: 'include' // 사용자 로그인 쿠키 포함
+})
+// → CORS 에러로 차단! 🛡️
+
+// ❌ CORS가 막는 데이터 탈취
+fetch('https://facebook.com/api/friends')
+// → 개인정보 접근 차단!
+```
+
+### CORS의 한계
+
+```html
+<!-- ✅ 이런 추적은 CORS와 무관하게 허용됨 -->
+<img src="https://tracker.com/pixel?user=123&visited=bank-site">
+<script src="https://analytics.com/track.js"></script>
+<iframe src="https://ads.com/targeting?interests=finance"></iframe>
+
+→ 추적 회사들이 이 허점을 활용! 🕷️
+```
+
+### 보안 정책의 진화
+
+```
+📅 1990년대: 완전 개방
+- 모든 크로스 도메인 요청 허용
+- 보안 개념 부족
+
+📅 2000년대: Same-Origin Policy  
+- JavaScript AJAX는 동일 출처만
+- <script>, <img> 태그는 여전히 허용
+
+📅 2010년대: CORS 도입
+- 서버가 명시적으로 허용하면 크로스 도메인 허용
+- Access-Control-Allow-Origin 헤더로 제어
+
+📅 2020년대: 추적 방지 강화
+- 서드파티 쿠키 차단 (Safari, Firefox, Chrome)
+- Tracking Prevention 활성화
+- Privacy Sandbox 도입
+```
+
+### 다층 보안 체계
+
+```
+🛡️ Layer 1: Same-Origin Policy (기본 차단)
+🛡️ Layer 2: CORS (선택적 허용)
+🛡️ Layer 3: Cookie SameSite (쿠키 제한)  
+🛡️ Layer 4: Tracking Prevention (추적 차단)
+🛡️ Layer 5: Content Security Policy (스크립트 제한)
+```
+
+### 브라우저별 추적 방지
+
+```
+🍎 Safari (2017~):
+- Intelligent Tracking Prevention (ITP)
+- 서드파티 쿠키 7일 후 자동 삭제
+
+🦊 Firefox (2019~):
+- Enhanced Tracking Protection  
+- 알려진 추적 스크립트 목록 기반 차단
+
+🎯 Chrome (2024~):
+- Privacy Sandbox 도입
+- 서드파티 쿠키 단계적 폐지
+- Topics API (관심사 기반 광고)
+```
+
+---
+
+이 가이드를 통해 하이드레이션부터 웹 보안까지, 현대 웹 개발의 핵심 개념들을 종합적으로 이해할 수 있을 것입니다. 이러한 지식은 성능 최적화와 보안을 모두 고려한 웹 애플리케이션 개발에 필수적입니다!

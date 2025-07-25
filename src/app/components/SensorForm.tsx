@@ -4,7 +4,7 @@ import { useFormStatus } from 'react-dom'
 import { useActionState } from 'react'
 import { createSensorData } from '../actions/timeseries'
 import type { ActionState } from '@/types/actions'
-import { useNotifications, useSensorData } from '@/lib/store'
+import { useNotifications } from '@/lib/store'
 
 function SubmitButton() {
   const { pending } = useFormStatus()
@@ -25,7 +25,6 @@ const initialState: ActionState = { success: false }
 export default function SensorForm() {
   const [state, formAction] = useActionState(createSensorData, initialState)
   const { addNotification } = useNotifications()
-  const { addSensorData } = useSensorData()
   
   // 성공/실패 시 알림 추가
   if (state.success && state.data) {
@@ -33,17 +32,6 @@ export default function SensorForm() {
       type: 'success',
       title: '센서 데이터 등록 완료',
       message: `센서 ${state.data.sensorId}의 데이터가 등록되었습니다.`
-    })
-    
-    // 스토어에 새 데이터 추가
-    addSensorData({
-      id: state.data.id,
-      sensorId: state.data.sensorId,
-      temperature: state.data.temperature,
-      humidity: state.data.humidity,
-      pressure: state.data.pressure,
-      location: state.data.location,
-      timestamp: new Date(state.data.timestamp)
     })
   }
   

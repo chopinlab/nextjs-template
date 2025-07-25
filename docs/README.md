@@ -10,7 +10,7 @@ docs/
 ├── fundamentals/                # 기초 개념
 │   ├── csr-vs-ssr.md           # CSR vs SSR 완전 가이드
 │   ├── browser-storage.md       # 브라우저 저장소 비교
-│   ├── hydration-guide.md       # 하이드레이션 완전 가이드
+│   ├── hydration-guide.md       # 하이드레이션 + 웹팩 + 브라우저 캐시 + CORS 종합 가이드
 │   └── authentication.md        # 인증 시스템 패턴
 ├── nextjs/                      # Next.js 관련
 │   ├── server-actions.md        # Server Actions 패턴
@@ -31,7 +31,8 @@ docs/
 ### 1. **기초 개념 (Fundamentals)**
 1. [CSR vs SSR 가이드](./fundamentals/csr-vs-ssr.md) - 렌더링 방식의 차이점과 선택 기준
 2. [브라우저 저장소](./fundamentals/browser-storage.md) - 쿠키, localStorage, sessionStorage 완전 정리
-3. [인증 시스템](./fundamentals/authentication.md) - JWT, 세션, httpOnly 쿠키
+3. [하이드레이션 종합 가이드](./fundamentals/hydration-guide.md) - 하이드레이션 + Webpack + 브라우저 캐시 + CORS 완전 이해
+4. [인증 시스템](./fundamentals/authentication.md) - JWT, 세션, httpOnly 쿠키
 
 ### 2. **Next.js 심화**
 1. [Server Actions](./nextjs/server-actions.md) - API Routes 없이 서버 로직 처리

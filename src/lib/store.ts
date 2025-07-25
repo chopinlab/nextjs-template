@@ -5,8 +5,7 @@ import type {
   AppState, 
   AuthState, 
   UIState, 
-  NotificationState, 
-  SensorDataState 
+  NotificationState
 } from '@/types/store'
 
 // Zustand 스토어 생성
@@ -19,7 +18,6 @@ export const useAppStore = create<AppState>()(
     theme: 'light',
     sidebarOpen: false,
     notifications: [],
-    sensorData: [],
     
     // 인증 관련 액션
     setUser: (user) => set({
@@ -55,13 +53,6 @@ export const useAppStore = create<AppState>()(
     
     removeNotification: (id) => set((state) => ({
       notifications: state.notifications.filter(n => n.id !== id)
-    })),
-    
-    // 센서 데이터 관련 액션
-    setSensorData: (data) => set({ sensorData: data }),
-    
-    addSensorData: (data) => set((state) => ({
-      sensorData: [data, ...state.sensorData].slice(0, 100) // 최근 100개만 유지
     }))
     })),
     {
@@ -106,10 +97,3 @@ export const useNotifications = (): NotificationState => {
   return { notifications, addNotification, removeNotification }
 }
 
-export const useSensorData = (): SensorDataState => {
-  const sensorData = useAppStore(state => state.sensorData)
-  const setSensorData = useAppStore(state => state.setSensorData)
-  const addSensorData = useAppStore(state => state.addSensorData)
-  
-  return { sensorData, setSensorData, addSensorData }
-}
