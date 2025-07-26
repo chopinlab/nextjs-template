@@ -343,28 +343,45 @@ DATABASE_URL        # 데이터베이스 연결 문자열
 JWT_SECRET         # JWT 토큰 암호화 키 (32자 이상)
 ```
 
-## 📊 로깅 시스템
+## 📊 로깅 시스템 (Pino 기반)
 
-### 통합 로깅 아키텍처
-- **서버사이드**: 구조화된 JSON 로그 (프로덕션) / 읽기 쉬운 형태 (개발)
-- **클라이언트사이드**: 브라우저 콘솔 (개발) / 외부 서비스 전송 (프로덕션)
-- **자동 환경 감지**: `typeof window === 'undefined'`로 서버/클라이언트 구분
+### Pino 로깅 아키텍처
+- **라이브러리**: [Pino](https://getpino.io/) - Node.js 최고 성능 로거 (Winston 대비 5배 빠름)
+- **백엔드**: 모든 로그 레벨 지원, `context: 'backend'` 라벨
+- **프론트엔드**: **에러만** 로깅, `context: 'frontend'` 라벨
+- **개발환경**: `pino-pretty`로 컬러풀한 읽기 쉬운 출력
+- **프로덕션**: 구조화된 JSON 로그
 
 ### 로깅 사용법
 ```typescript
 import { log } from '@/lib/logger'
 
-// 기본 로깅
+// 기본 로깅 (백엔드만)
 log.info('사용자 로그인', { userId: '123', email: 'user@example.com' })
+log.warn('잠재적 문제', { issue: 'slow query' })
+log.debug('디버그 정보', { details: 'trace info' })
+
+// 에러 로깅 (백엔드 + 프론트엔드)
 log.error('데이터베이스 연결 실패', { error: 'Connection timeout' })
 
-// Server Actions 전용
+// Server Actions 전용 (백엔드)
 log.action('createUser', 'start')
 log.action('createUser', 'success', { userId: newUser.id })
 log.action('createUser', 'error', { error: 'Email already exists' })
 
-// API Routes 전용  
+// API Routes 전용 (백엔드)
 log.api('POST', '/api/users', 201, 150, { userId: '123' })
+```
+
+### 환경별 동작
+```bash
+# 개발환경
+- 백엔드: 컬러풀한 pretty 출력 (모든 레벨)
+- 프론트엔드: 브라우저 콘솔에 에러만
+
+# 프로덕션
+- 백엔드: JSON 구조화 로그 (stdout)
+- 프론트엔드: 브라우저 콘솔에 에러만
 ```
 
 ### 로그 레벨 설정
@@ -372,12 +389,19 @@ log.api('POST', '/api/users', 201, 150, { userId: '123' })
 # 환경변수로 제어
 LOG_LEVEL=debug    # debug, info, warn, error
 LOGGING_ENABLED=true
+
+# 개발용 의존성
+npm install pino pino-pretty
 ```
 
-### 프로덕션 권장사항
-- **서버 로그**: 파일 시스템 또는 중앙 로깅 서비스 (ELK, Splunk)
-- **클라이언트 로그**: Sentry, LogRocket, Datadog 등 외부 서비스
-- **로그 레벨**: 프로덕션에서는 `info` 이상, 개발에서는 `debug`
+### 로그 출력 예시
+```bash
+# 개발환경 (pino-pretty)
+[2024-01-15 10:30:45] INFO (backend): Action createUser start {"actionName":"createUser","type":"server_action"}
+
+# 프로덕션 (JSON)
+{"level":30,"time":1705301445123,"name":"backend","context":"backend","msg":"Action createUser start","actionName":"createUser","type":"server_action"}
+```
 
 ### Prisma 명령어
 ```bash
