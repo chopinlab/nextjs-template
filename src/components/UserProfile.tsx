@@ -1,6 +1,6 @@
 'use client'
 
-import { useAuth } from '@/lib/store'
+import { useAuth } from '@/stores'
 
 export default function UserProfile() {
   const { user, isAuthenticated, logout } = useAuth()

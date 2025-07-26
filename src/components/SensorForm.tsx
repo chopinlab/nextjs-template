@@ -2,9 +2,9 @@
 
 import { useFormStatus } from 'react-dom'
 import { useActionState } from 'react'
-import { createSensorData } from '../actions/timeseries'
+import { createSensorData } from '@/app/actions/timeseries'
 import type { ActionState } from '@/types/actions'
-import { useNotifications } from '@/lib/store'
+import { useNotifications } from '@/stores'
 
 function SubmitButton() {
   const { pending } = useFormStatus()

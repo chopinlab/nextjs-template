@@ -1,12 +1,20 @@
 import { PrismaClient } from '../../generated/prisma'
+import { config, isProd } from './config'
 
 declare global {
   var prisma: PrismaClient | undefined
 }
 
-export const prisma = globalThis.prisma ?? new PrismaClient()
+export const prisma = globalThis.prisma ?? new PrismaClient({
+  datasources: {
+    db: {
+      url: config.database.url,
+    },
+  },
+  log: config.logging.enabled ? ['error', 'warn'] : [],
+})
 
-if (process.env.NODE_ENV !== 'production') {
+if (!isProd) {
   globalThis.prisma = prisma
 }
 

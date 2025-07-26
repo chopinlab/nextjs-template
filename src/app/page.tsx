@@ -1,8 +1,8 @@
-import TimeSeriesForm from './components/TimeSeriesForm'
-import SensorForm from './components/SensorForm'
-import ThemeToggle from './components/ThemeToggle'
-import UserProfile from './components/UserProfile'
-import DevLoginForm from './components/DevLoginForm'
+import TimeSeriesForm from '@/components/TimeSeriesForm'
+import SensorForm from '@/components/SensorForm'
+import ThemeToggle from '@/components/ThemeToggle'
+import UserProfile from '@/components/UserProfile'
+import DevLoginForm from '@/components/DevLoginForm'
 
 export default function Home() {
   return (

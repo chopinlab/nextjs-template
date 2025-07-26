@@ -35,5 +35,5 @@ next-env.d.ts
 /generated/prisma
 
 
-# note
-todo/
+# Development notes
+.todo/

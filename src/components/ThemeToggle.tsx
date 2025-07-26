@@ -1,7 +1,7 @@
 'use client'
 
 import { useEffect } from 'react'
-import { useUI } from '@/lib/store'
+import { useUI } from '@/stores'
 
 export default function ThemeToggle() {
   const { theme, toggleTheme } = useUI()

@@ -1,7 +1,7 @@
 'use client'
 
 import { useEffect } from 'react'
-import { useNotifications } from '@/lib/store'
+import { useNotifications } from '@/stores'
 
 export default function NotificationToast() {
   const { notifications, removeNotification } = useNotifications()

@@ -1,7 +1,7 @@
 'use client'
 
 import { useEffect } from 'react'
-import { useAppStore } from '@/lib/store'
+import { useAppStore } from '@/stores'
 import type { User } from '@/types/store'
 
 interface ClientProviderProps {

@@ -18,11 +18,15 @@ Server Actions + Zustand를 활용한 현대적 풀스택 템플릿입니다.
 # 1. 의존성 설치
 npm install
 
-# 2. 데이터베이스 설정
+# 2. 환경 설정
+cp .env.example .env.local
+# .env.local 파일을 열어서 필요한 값들을 설정하세요
+
+# 3. 데이터베이스 설정
 npx prisma generate
 npx prisma migrate dev --name init
 
-# 3. 개발 서버 실행
+# 4. 개발 서버 실행
 npm run dev
 ```
 
@@ -30,21 +34,29 @@ npm run dev
 
 ```
 src/
-├── app/
+├── app/                  # Next.js App Router
 │   ├── actions/          # Server Actions (인증, 데이터 처리)
 │   ├── api/              # REST API Routes
 │   │   └── v1/health/    # 헬스체크 엔드포인트
-│   ├── components/       # React 컴포넌트 (SSR + CSR)
+│   ├── login/            # 로그인 페이지
+│   ├── globals.css       # 전역 스타일
+│   ├── layout.tsx        # 루트 레이아웃
 │   └── page.tsx         # 메인 페이지
-├── lib/
+├── components/           # React 컴포넌트 (재사용 가능)
+├── hooks/                # 커스텀 훅
+├── stores/               # Zustand 상태 관리
+│   ├── store.ts          # 메인 앱 스토어
+│   └── index.ts          # 스토어 중앙 export
+├── lib/                  # 유틸리티 및 설정
+│   ├── config.ts         # 환경 설정
 │   ├── db.ts            # Prisma 클라이언트
-│   ├── store.ts         # Zustand 전역 상태 관리
 │   └── auth.ts          # 서버 세션 관리
-├── types/
+├── types/               # TypeScript 타입 정의
 │   ├── actions.ts       # Server Actions 타입
 │   └── store.ts         # Zustand 스토어 타입
-└── docs/                # 📚 학습 문서
-    └── fundamentals/    # 기초 개념 가이드
+└── instrumentation.ts   # 서버 초기화
+docs/                    # 📚 학습 문서
+└── fundamentals/        # 기초 개념 가이드
 ```
 
 ## 📚 학습 문서
@@ -237,6 +249,75 @@ npm run lint     # 린트 검사
 ### API 엔드포인트
 ```bash
 GET /api/v1/health    # 헬스체크 (서버 상태 확인)
+```
+
+## 📁 폴더 구조 가이드
+
+### Next.js 표준 구조 적용
+이 템플릿은 **확장성과 유지보수성**을 고려한 Next.js 표준 구조를 사용합니다:
+
+```typescript
+// ✅ 절대 경로 사용 (권장)
+import { useAuth } from '@/stores'
+import { config } from '@/lib/config'
+import { Button } from '@/components/Button'
+import { createUser } from '@/app/actions/auth'
+
+// ❌ 상대 경로 사용 (지양)
+import { useAuth } from '../../../stores'
+import { config } from '../../lib/config'
+```
+
+### 폴더별 역할
+- **`app/`**: 페이지, API Routes, Server Actions
+- **`components/`**: 재사용 가능한 UI 컴포넌트
+- **`hooks/`**: 커스텀 React 훅
+- **`stores/`**: Zustand 상태 관리 스토어
+- **`lib/`**: 유틸리티, 설정, 외부 라이브러리 래퍼
+- **`types/`**: TypeScript 타입 정의
+
+### 확장 시 고려사항
+- **컴포넌트**: 5개 이상 → `components/ui/`, `components/forms/` 세분화
+- **훅**: 5개 이상 → 기능별 폴더 구조
+- **스토어**: 3개 이상 → 도메인별 스토어 분리
+
+## ⚙️ 환경 설정
+
+### 환경변수 관리
+```bash
+# 환경변수 파일 우선순위
+.env.local          # 개발용 (gitignore, 최우선)
+.env.production     # 프로덕션용
+.env.development    # 개발 기본값
+.env                # 전체 기본값
+```
+
+### 설정 사용법
+```typescript
+// 중앙 관리된 설정 사용
+import { config, isDev, isProd } from '@/lib/config'
+
+// 스토어 사용
+import { useAuth, useUI, useNotifications } from '@/stores'
+
+// 데이터베이스 설정
+const dbUrl = config.database.url
+const maxConnections = config.database.maxConnections
+
+// 환경별 분기
+if (isDev) {
+  console.log('개발 환경입니다')
+}
+
+// 상태 관리 사용
+const { user, isAuthenticated } = useAuth()
+const { theme, toggleTheme } = useUI()
+```
+
+### 필수 환경변수 (프로덕션)
+```bash
+DATABASE_URL        # 데이터베이스 연결 문자열
+JWT_SECRET         # JWT 토큰 암호화 키 (32자 이상)
 ```
 
 ### Prisma 명령어

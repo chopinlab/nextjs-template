@@ -2,7 +2,7 @@
 
 import { useFormStatus } from 'react-dom'
 import { useActionState } from 'react'
-import { devLogin } from '../actions/auth'
+import { devLogin } from '@/app/actions/auth'
 import type { ActionState } from '@/types/actions'
 
 function SubmitButton() {

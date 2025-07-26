@@ -1,7 +1,7 @@
 import type { Metadata } from 'next'
 import './globals.css'
-import NotificationToast from './components/NotificationToast'
-import ClientProvider from './components/ClientProvider'
+import NotificationToast from '@/components/NotificationToast'
+import ClientProvider from '@/components/ClientProvider'
 import { getServerSession } from '@/lib/auth'
 
 export const metadata: Metadata = {

@@ -2,7 +2,7 @@
 
 import { useFormStatus } from 'react-dom'
 import { useActionState } from 'react'
-import { createTimeSeriesData } from '../actions/timeseries'
+import { createTimeSeriesData } from '@/app/actions/timeseries'
 import type { ActionState } from '@/types/actions'
 
 function SubmitButton() {
