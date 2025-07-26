@@ -5,31 +5,41 @@ import { config } from './config'
 const isServer = typeof window === 'undefined'
 const isDevelopment = config.app.env === 'development'
 
-// Pino 로거 설정
+// Pino 로거 설정 (Next.js 호환)
 const createLogger = () => {
   if (isServer) {
     // 서버사이드 로거
-    return pino({
-      name: 'backend',
-      level: config.logging.enabled ? config.logging.level : 'silent',
-      transport: isDevelopment ? {
-        target: 'pino-pretty',
-        options: {
-          colorize: true,
-          translateTime: 'SYS:standard',
-          ignore: 'pid,hostname',
+    if (isDevelopment) {
+      // 개발환경: pino-pretty 없이 기본 출력
+      return pino({
+        name: 'backend',
+        level: config.logging.enabled ? config.logging.level : 'silent',
+        formatters: {
+          level: (label) => ({ level: label }),
+          log: (object) => object,
+        },
+        timestamp: pino.stdTimeFunctions.isoTime,
+        base: {
+          env: config.app.env,
+          context: 'backend'
         }
-      } : undefined,
-      base: {
-        env: config.app.env,
-        context: 'backend'
-      }
-    })
+      })
+    } else {
+      // 프로덕션: JSON 출력
+      return pino({
+        name: 'backend',
+        level: config.logging.enabled ? config.logging.level : 'silent',
+        base: {
+          env: config.app.env,
+          context: 'backend'
+        }
+      })
+    }
   } else {
     // 클라이언트사이드 로거 (에러만)
     return pino({
       name: 'frontend',
-      level: 'error', // 프론트엔드는 에러만 로깅
+      level: 'error',
       browser: {
         asObject: true,
         formatters: {
