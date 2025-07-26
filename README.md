@@ -32,6 +32,8 @@ npm run dev
 src/
 ├── app/
 │   ├── actions/          # Server Actions (인증, 데이터 처리)
+│   ├── api/              # REST API Routes
+│   │   └── v1/health/    # 헬스체크 엔드포인트
 │   ├── components/       # React 컴포넌트 (SSR + CSR)
 │   └── page.tsx         # 메인 페이지
 ├── lib/
@@ -230,6 +232,11 @@ export default function ClientProvider({ initialUser, children }) {
 npm run dev      # 개발 서버
 npm run build    # 프로덕션 빌드
 npm run lint     # 린트 검사
+```
+
+### API 엔드포인트
+```bash
+GET /api/v1/health    # 헬스체크 (서버 상태 확인)
 ```
 
 ### Prisma 명령어
