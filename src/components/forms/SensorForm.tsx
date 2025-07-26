@@ -2,8 +2,8 @@
 
 import { useFormStatus } from 'react-dom'
 import { useActionState } from 'react'
-import { createSensorData } from '@/app/actions/timeseries'
-import type { ActionState } from '@/types/actions'
+import { createSensorData } from '@/app/actions/sensors'
+import type { SensorActionState } from '@/types/actions'
 import { useNotifications } from '@/stores'
 
 function SubmitButton() {
@@ -20,7 +20,7 @@ function SubmitButton() {
   )
 }
 
-const initialState: ActionState = { success: false }
+const initialState: SensorActionState = { success: false }
 
 export default function SensorForm() {
   const [state, formAction] = useActionState(createSensorData, initialState)

@@ -3,7 +3,7 @@
 import { useFormStatus } from 'react-dom'
 import { useActionState } from 'react'
 import { createTimeSeriesData } from '@/app/actions/timeseries'
-import type { ActionState } from '@/types/actions'
+import type { TimeSeriesActionState } from '@/types/actions'
 
 function SubmitButton() {
   const { pending } = useFormStatus()
@@ -19,7 +19,7 @@ function SubmitButton() {
   )
 }
 
-const initialState: ActionState = { success: false }
+const initialState: TimeSeriesActionState = { success: false }
 
 export default function TimeSeriesForm() {
   const [state, formAction] = useActionState(createTimeSeriesData, initialState)

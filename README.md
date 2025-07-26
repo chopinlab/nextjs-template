@@ -35,14 +35,26 @@ npm run dev
 ```
 src/
 ├── app/                  # Next.js App Router
-│   ├── actions/          # Server Actions (인증, 데이터 처리)
+│   ├── (auth)/           # 🔐 인증 관련 페이지
+│   │   └── login/        # 로그인 페이지
+│   ├── (dashboard)/      # 📊 대시보드 관련 페이지
+│   │   └── dashboard/    # 메인 대시보드
+│   ├── (public)/         # 🌐 공개 페이지
+│   │   └── page.tsx      # 홈페이지
+│   ├── actions/          # Server Actions (도메인별 분리)
+│   │   ├── auth/         # 인증 관련 Actions
+│   │   ├── sensors/      # 센서 데이터 Actions
+│   │   ├── timeseries/   # 시계열 데이터 Actions
+│   │   └── users/        # 사용자 관리 Actions
 │   ├── api/              # REST API Routes
 │   │   └── v1/health/    # 헬스체크 엔드포인트
-│   ├── login/            # 로그인 페이지
 │   ├── globals.css       # 전역 스타일
-│   ├── layout.tsx        # 루트 레이아웃
-│   └── page.tsx         # 메인 페이지
-├── components/           # React 컴포넌트 (재사용 가능)
+│   └── layout.tsx        # 루트 레이아웃
+├── components/           # React 컴포넌트 (기능별 분리)
+│   ├── forms/            # 폼 관련 컴포넌트
+│   ├── ui/               # 재사용 UI 컴포넌트
+│   ├── features/         # 기능별 컴포넌트
+│   └── index.ts          # 컴포넌트 중앙 export
 ├── hooks/                # 커스텀 훅
 ├── stores/               # Zustand 상태 관리
 │   ├── store.ts          # 메인 앱 스토어
@@ -52,7 +64,7 @@ src/
 │   ├── db.ts            # Prisma 클라이언트
 │   └── auth.ts          # 서버 세션 관리
 ├── types/               # TypeScript 타입 정의
-│   ├── actions.ts       # Server Actions 타입
+│   ├── actions.ts       # Server Actions 타입 (제네릭 지원)
 │   └── store.ts         # Zustand 스토어 타입
 └── instrumentation.ts   # 서버 초기화
 docs/                    # 📚 학습 문서
@@ -269,17 +281,21 @@ import { config } from '../../lib/config'
 ```
 
 ### 폴더별 역할
-- **`app/`**: 페이지, API Routes, Server Actions
-- **`components/`**: 재사용 가능한 UI 컴포넌트
-- **`hooks/`**: 커스텀 React 훅
-- **`stores/`**: Zustand 상태 관리 스토어
+- **`app/`**: Next.js App Router 기반 페이지 및 API
+  - **Route Groups**: `(auth)`, `(dashboard)`, `(public)` 의미적 분리
+  - **Server Actions**: 도메인별 분리된 서버 로직
+- **`components/`**: 기능별로 분리된 React 컴포넌트
+  - **`forms/`**: 폼 관련 컴포넌트
+  - **`ui/`**: 재사용 가능한 UI 컴포넌트  
+  - **`features/`**: 기능별 비즈니스 로직 컴포넌트
+- **`stores/`**: Zustand 상태 관리 (중앙 export 구조)
 - **`lib/`**: 유틸리티, 설정, 외부 라이브러리 래퍼
-- **`types/`**: TypeScript 타입 정의
+- **`types/`**: 제네릭 지원 TypeScript 타입 정의
 
 ### 확장 시 고려사항
-- **컴포넌트**: 5개 이상 → `components/ui/`, `components/forms/` 세분화
-- **훅**: 5개 이상 → 기능별 폴더 구조
-- **스토어**: 3개 이상 → 도메인별 스토어 분리
+- **Server Actions**: 도메인별 폴더 구조로 확장 용이
+- **컴포넌트**: 이미 기능별 분리 완료, 하위 카테고리 추가 가능
+- **타입 안전성**: 제네릭 ActionState로 완전한 타입 지원
 
 ## ⚙️ 환경 설정
 
@@ -297,8 +313,15 @@ import { config } from '../../lib/config'
 // 중앙 관리된 설정 사용
 import { config, isDev, isProd } from '@/lib/config'
 
-// 스토어 사용
+// 스토어 사용 (타입 안전)
 import { useAuth, useUI, useNotifications } from '@/stores'
+
+// 컴포넌트 사용 (중앙 import)
+import { TimeSeriesForm, ThemeToggle, UserProfile } from '@/components'
+
+// Server Actions 사용 (도메인별)
+import { createSensorData } from '@/app/actions/sensors'
+import { createTimeSeriesData } from '@/app/actions/timeseries'
 
 // 데이터베이스 설정
 const dbUrl = config.database.url
