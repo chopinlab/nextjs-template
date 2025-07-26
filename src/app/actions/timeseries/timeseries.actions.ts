@@ -2,16 +2,20 @@
 
 import { revalidatePath } from 'next/cache'
 import { prisma, timeSeriesQueries } from '@/lib/db'
+import { log } from '@/lib/logger'
 import type { TimeSeriesActionState, TimeSeriesListActionState } from '@/types/actions'
 
 // 시계열 데이터 생성
 export async function createTimeSeriesData(prevState: TimeSeriesActionState, formData: FormData): Promise<TimeSeriesActionState> {
+  log.action('createTimeSeriesData', 'start')
+  
   try {
     const metric = formData.get('metric') as string
     const value = formData.get('value') as string
     const tags = formData.get('tags') as string
 
     if (!metric || !value) {
+      log.action('createTimeSeriesData', 'error', { error: 'Required fields missing', metric, value })
       return { success: false, error: 'metric과 value는 필수입니다' }
     }
 
@@ -21,6 +25,7 @@ export async function createTimeSeriesData(prevState: TimeSeriesActionState, for
       try {
         parsedTags = JSON.parse(tags)
       } catch (error) {
+        log.action('createTimeSeriesData', 'error', { error: 'JSON parse failed', tags })
         return { success: false, error: '태그 JSON 형식이 올바르지 않습니다' }
       }
     }
@@ -34,9 +39,10 @@ export async function createTimeSeriesData(prevState: TimeSeriesActionState, for
     })
 
     revalidatePath('/')
+    log.action('createTimeSeriesData', 'success', { dataId: result.id, metric })
     return { success: true, data: result }
   } catch (error) {
-    console.error('시계열 데이터 생성 오류:', error)
+    log.action('createTimeSeriesData', 'error', { error: error instanceof Error ? error.message : 'Unknown error' })
     return { success: false, error: '데이터 생성에 실패했습니다' }
   }
 }

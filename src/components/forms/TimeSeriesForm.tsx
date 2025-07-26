@@ -3,6 +3,7 @@
 import { useFormStatus } from 'react-dom'
 import { useActionState } from 'react'
 import { createTimeSeriesData } from '@/app/actions/timeseries'
+import { log } from '@/lib/logger'
 import type { TimeSeriesActionState } from '@/types/actions'
 
 function SubmitButton() {
@@ -23,6 +24,21 @@ const initialState: TimeSeriesActionState = { success: false }
 
 export default function TimeSeriesForm() {
   const [state, formAction] = useActionState(createTimeSeriesData, initialState)
+  
+  // 클라이언트사이드 상태 변화 로깅
+  if (state.success && state.data) {
+    log.info('TimeSeries form submitted successfully', { 
+      component: 'TimeSeriesForm',
+      dataId: state.data.id 
+    })
+  }
+  
+  if (state.error) {
+    log.warn('TimeSeries form submission failed', {
+      component: 'TimeSeriesForm', 
+      error: state.error 
+    })
+  }
   
   return (
     <div>

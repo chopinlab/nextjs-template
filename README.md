@@ -343,6 +343,42 @@ DATABASE_URL        # 데이터베이스 연결 문자열
 JWT_SECRET         # JWT 토큰 암호화 키 (32자 이상)
 ```
 
+## 📊 로깅 시스템
+
+### 통합 로깅 아키텍처
+- **서버사이드**: 구조화된 JSON 로그 (프로덕션) / 읽기 쉬운 형태 (개발)
+- **클라이언트사이드**: 브라우저 콘솔 (개발) / 외부 서비스 전송 (프로덕션)
+- **자동 환경 감지**: `typeof window === 'undefined'`로 서버/클라이언트 구분
+
+### 로깅 사용법
+```typescript
+import { log } from '@/lib/logger'
+
+// 기본 로깅
+log.info('사용자 로그인', { userId: '123', email: 'user@example.com' })
+log.error('데이터베이스 연결 실패', { error: 'Connection timeout' })
+
+// Server Actions 전용
+log.action('createUser', 'start')
+log.action('createUser', 'success', { userId: newUser.id })
+log.action('createUser', 'error', { error: 'Email already exists' })
+
+// API Routes 전용  
+log.api('POST', '/api/users', 201, 150, { userId: '123' })
+```
+
+### 로그 레벨 설정
+```bash
+# 환경변수로 제어
+LOG_LEVEL=debug    # debug, info, warn, error
+LOGGING_ENABLED=true
+```
+
+### 프로덕션 권장사항
+- **서버 로그**: 파일 시스템 또는 중앙 로깅 서비스 (ELK, Splunk)
+- **클라이언트 로그**: Sentry, LogRocket, Datadog 등 외부 서비스
+- **로그 레벨**: 프로덕션에서는 `info` 이상, 개발에서는 `debug`
+
 ### Prisma 명령어
 ```bash
 npx prisma generate                    # 클라이언트 생성
