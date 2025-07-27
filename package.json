@@ -4,15 +4,10 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "dev": "next dev --turbo",
+    "dev": "node server.js",
     "build": "next build",
-    "start": "next start",
-    "lint": "next lint",
-    "test": "jest",
-    "test:unit": "jest --testPathIgnorePatterns=integration",
-    "test:integration": "jest --testPathPatterns=integration",
-    "test:watch": "jest --watch",
-    "test:coverage": "jest --coverage"
+    "start": "NODE_ENV=production node server.js",
+    "test": "jest --testPathPatterns=integration"
   },
   "repository": {
     "type": "git",
@@ -36,7 +31,11 @@
     "prisma": "^6.12.0",
     "react": "^19.1.0",
     "react-dom": "^19.1.0",
+    "ws": "^8.18.0",
     "zustand": "^5.0.6"
+  },
+  "optionalDependencies": {
+    "concurrently": "^9.1.0"
   },
   "devDependencies": {
     "@jest/globals": "^30.0.5",
@@ -44,6 +43,7 @@
     "@types/node": "^24.1.0",
     "@types/react": "^19.1.8",
     "@types/react-dom": "^19.1.6",
+    "@types/ws": "^8.5.15",
     "autoprefixer": "^10.4.21",
     "eslint": "^9.31.0",
     "eslint-config-next": "^15.4.3",

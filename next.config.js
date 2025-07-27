@@ -6,6 +6,9 @@ const nextConfig = {
   // 개발 환경 설정
   turbopack: {},
   
+  // React Strict Mode 비활성화 (WebSocket 안정성을 위해)
+  reactStrictMode: false,
+  
   // 환경별 설정
   experimental: {
     // Server Actions 최적화

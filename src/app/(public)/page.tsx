@@ -4,6 +4,8 @@ import {
   ThemeToggle,
   UserProfile
 } from '@/components'
+import WebSocketStatus from '@/components/WebSocketStatus'
+import RealtimeTimeSeriesData from '@/components/RealtimeTimeSeriesData'
 
 export default function HomePage() {
   return (
@@ -26,6 +28,19 @@ export default function HomePage() {
           </div>
         </div>
         
+        <div className="grid lg:grid-cols-2 gap-8 mb-8">
+          <div className="bg-white dark:bg-gray-800 p-6 rounded-lg shadow-lg">
+            <h2 className="text-xl font-semibold mb-4 text-gray-900 dark:text-white">
+              WebSocket 연결 상태
+            </h2>
+            <WebSocketStatus />
+          </div>
+          
+          <div className="bg-white dark:bg-gray-800 p-6 rounded-lg shadow-lg">
+            <RealtimeTimeSeriesData />
+          </div>
+        </div>
+
         <div className="bg-white dark:bg-gray-800 p-6 rounded-lg shadow-lg mb-8">
           <h2 className="text-2xl font-semibold mb-4 text-gray-900 dark:text-white">
             시작하기
