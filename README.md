@@ -1,6 +1,6 @@
 # Next.js 15 Server Actions 중심 풀스택 템플릿
 
-TimescaleDB + Server Actions + Jest 통합 테스트를 활용한 현대적 풀스택 템플릿입니다.
+TimescaleDB + Server Actions + WebSocket + Jest 통합 테스트를 활용한 현대적 풀스택 템플릿입니다.
 
 ## 🚀 기술 스택
 
@@ -10,6 +10,7 @@ TimescaleDB + Server Actions + Jest 통합 테스트를 활용한 현대적 풀�
 - **Database**: TimescaleDB (PostgreSQL + 시계열 확장)
 - **ORM**: Prisma
 - **State Management**: Zustand 5.0.6 + persist middleware
+- **Real-time**: WebSocket (ws 라이브러리 + 커스텀 서버)
 - **Testing**: Jest + Integration Tests (실제 DB 사용)
 - **Logging**: Pino (고성능 로거)
 - **Deployment**: Docker + Docker Compose
@@ -30,7 +31,7 @@ npm install
 npx prisma generate
 npx prisma migrate dev --name init
 
-# 4. 개발 서버 실행
+# 4. 개발 서버 실행 (Next.js + WebSocket 통합)
 npm run dev
 ```
 
@@ -38,16 +39,7 @@ npm run dev
 
 ```bash
 # 통합 테스트 (실제 TimescaleDB 사용)
-npm run test:integration
-
-# 단위 테스트 (모킹)
-npm run test:unit
-
-# 모든 테스트
 npm test
-
-# Watch 모드
-npm run test:watch
 ```
 
 ### 프로덕션 배포
@@ -73,8 +65,9 @@ src/
 │   │   ├── sensors/      # 센서 데이터 Actions
 │   │   ├── timeseries/   # 시계열 데이터 Actions
 │   │   └── users/        # 사용자 관리 Actions
-│   ├── api/              # REST API Routes
-│   │   └── v1/health/    # 헬스체크 엔드포인트
+│   ├── api/              # REST API Routes + WebSocket
+│   │   ├── v1/health/    # 헬스체크 엔드포인트
+│   │   └── ws/           # WebSocket 엔드포인트
 │   ├── globals.css       # 전역 스타일
 │   └── layout.tsx        # 루트 레이아웃
 ├── components/           # React 컴포넌트 (기능별 분리)
@@ -83,16 +76,20 @@ src/
 │   ├── features/         # 기능별 컴포넌트
 │   └── index.ts          # 컴포넌트 중앙 export
 ├── hooks/                # 커스텀 훅
+│   └── useWebSocket.ts   # WebSocket 클라이언트 훅
 ├── stores/               # Zustand 상태 관리
 │   ├── store.ts          # 메인 앱 스토어
+│   ├── websocket.ts      # WebSocket 상태 관리
 │   └── index.ts          # 스토어 중앙 export
 ├── lib/                  # 유틸리티 및 설정
 │   ├── config.ts         # 환경 설정
 │   ├── db.ts            # Prisma 클라이언트
-│   └── auth.ts          # 서버 세션 관리
+│   ├── auth.ts          # 서버 세션 관리
+│   └── websocket.ts     # WebSocket 서버 로직
 ├── types/               # TypeScript 타입 정의
 │   ├── actions.ts       # Server Actions 타입 (제네릭 지원)
-│   └── store.ts         # Zustand 스토어 타입
+│   ├── store.ts         # Zustand 스토어 타입
+│   └── websocket.ts     # WebSocket 메시지 타입
 └── instrumentation.ts   # 서버 초기화
 docs/                    # 📚 학습 문서
 └── fundamentals/        # 기초 개념 가이드
@@ -357,10 +354,10 @@ docker-compose -f docker-compose.prod.yml up --build
 
 ### 기본 명령어
 ```bash
-npm run dev      # 개발 서버 (Turbopack)
+npm run dev      # 개발 서버 (Next.js + WebSocket 통합)
 npm run build    # 프로덕션 빌드
 npm run start    # 프로덕션 서버
-npm run lint     # 린트 검사
+npm test         # 통합 테스트 (실제 TimescaleDB 사용)
 ```
 
 ### 데이터베이스
@@ -372,7 +369,8 @@ npx prisma studio                      # DB GUI
 
 ### API 엔드포인트
 ```bash
-GET /api/health    # 헬스체크 (서버 상태 확인)
+GET /api/health         # 헬스체크 (서버 상태 확인)
+WS  /api/ws            # WebSocket 실시간 통신
 ```
 
 ## 📁 폴더 구조 가이드
@@ -559,6 +557,64 @@ cookies().set('jwt-token', token, {
 ```
 
 > 💡 **상세한 저장소 특징과 보안 가이드**는 [브라우저 저장소 가이드](./docs/fundamentals/browser-storage.md)를 참고하세요.
+
+---
+
+## 🔌 WebSocket 실시간 통신
+
+### 아키텍처
+- **커스텀 서버**: Next.js + WebSocket을 단일 프로세스로 통합
+- **클라이언트 훅**: `useWebSocket`으로 자동 연결/재연결 관리
+- **상태 관리**: Zustand 기반 실시간 메시지 히스토리
+- **타입 안전**: TypeScript로 메시지 타입 완전 지원
+
+### 기본 사용법
+
+```typescript
+'use client'
+import { useWebSocket } from '@/hooks/useWebSocket'
+
+export default function RealtimeComponent() {
+  const { subscribe, send, isConnected } = useWebSocket()
+
+  useEffect(() => {
+    const unsubscribe = subscribe('timeseries_update', (data) => {
+      console.log('실시간 데이터:', data)
+    })
+    return unsubscribe
+  }, [subscribe])
+
+  const sendTestData = () => {
+    send('timeseries_update', {
+      metric: 'cpu_usage',
+      value: 85.5,
+      timestamp: new Date()
+    })
+  }
+
+  return (
+    <div>
+      <p>연결 상태: {isConnected ? '🟢 연결됨' : '🔴 끊어짐'}</p>
+      <button onClick={sendTestData}>테스트 데이터 전송</button>
+    </div>
+  )
+}
+```
+
+### 연결 정보
+- **개발환경**: `ws://localhost:3000/api/ws`
+- **자동 재연결**: 최대 5회, 3초 간격
+- **브라우저 제한**: 도메인당 최대 255개 동시 연결 (Chrome 기준)
+
+### 메시지 타입
+```typescript
+// 지원하는 메시지 타입
+type WebSocketEventType = 
+  | 'timeseries_update'   // 시계열 데이터 업데이트
+  | 'sensor_update'       // 센서 데이터 업데이트  
+  | 'user_status'         // 사용자 상태 변경
+  | 'system_notification' // 시스템 알림
+```
 
 ---
 
