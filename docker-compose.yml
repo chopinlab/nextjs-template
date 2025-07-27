@@ -17,7 +17,7 @@ services:
     volumes:
       - timescaledb_data:/var/lib/postgresql/data
       # TimescaleDB 초기화 스크립트
-      - ./docker/init-timescaledb.sql:/docker-entrypoint-initdb.d/init-timescaledb.sql:ro
+      - ./scripts/init-db.sql:/docker-entrypoint-initdb.d/init-db.sql:ro
     command: >
       postgres
       -c shared_preload_libraries=timescaledb

@@ -1,33 +1,60 @@
-# Next.js 15 SSR + CSR 하이브리드 템플릿
+# Next.js 15 Server Actions 중심 풀스택 템플릿
 
-Server Actions + Zustand를 활용한 현대적 풀스택 템플릿입니다.
+TimescaleDB + Server Actions + Jest 통합 테스트를 활용한 현대적 풀스택 템플릿입니다.
 
 ## 🚀 기술 스택
 
 - **Framework**: Next.js 15.4.3 (App Router)
-- **Language**: TypeScript
-- **Styling**: Tailwind CSS + 다크모드 지원
-- **Database**: SQLite (개발용) / PostgreSQL (운영용)
+- **Language**: TypeScript (완전 타입 지원)
+- **Styling**: Tailwind CSS
+- **Database**: TimescaleDB (PostgreSQL + 시계열 확장)
 - **ORM**: Prisma
 - **State Management**: Zustand 5.0.6 + persist middleware
-- **Architecture**: SSR + CSR 하이브리드
+- **Testing**: Jest + Integration Tests (실제 DB 사용)
+- **Logging**: Pino (고성능 로거)
+- **Deployment**: Docker + Docker Compose
+- **Architecture**: Server Actions 중심 풀스택
 
 ## 📦 빠른 시작
 
+### 개발 환경 설정
+
 ```bash
-# 1. 의존성 설치
+# 1. 인프라 실행 (TimescaleDB)
+docker-compose up -d
+
+# 2. 의존성 설치
 npm install
 
-# 2. 환경 설정
-cp .env.example .env.local
-# .env.local 파일을 열어서 필요한 값들을 설정하세요
-
-# 3. 데이터베이스 설정
+# 3. 데이터베이스 초기화
 npx prisma generate
 npx prisma migrate dev --name init
 
 # 4. 개발 서버 실행
 npm run dev
+```
+
+### 테스트 실행
+
+```bash
+# 통합 테스트 (실제 TimescaleDB 사용)
+npm run test:integration
+
+# 단위 테스트 (모킹)
+npm run test:unit
+
+# 모든 테스트
+npm test
+
+# Watch 모드
+npm run test:watch
+```
+
+### 프로덕션 배포
+
+```bash
+# Docker Compose로 전체 스택 배포
+docker-compose -f docker-compose.prod.yml up --build
 ```
 
 ## 🏗️ 프로젝트 구조
@@ -249,18 +276,103 @@ export default function ClientProvider({ initialUser, children }) {
 
 ---
 
-# 🛠️ 개발 명령어
+## 🧪 테스트 시스템
+
+### Jest 기반 통합 테스트
+
+**실제 TimescaleDB를 사용한 통합 테스트**로 Server Actions의 전체 플로우를 검증합니다.
+
+```typescript
+// 테스트 예시: createTimeSeriesData 통합 테스트
+describe('createTimeSeriesData', () => {
+  it('should create time series data in real TimescaleDB', async () => {
+    const formData = new FormData()
+    formData.append('metric', '__test__cpu_usage')
+    formData.append('value', '85.5')
+    formData.append('tags', '{"server": "web-01"}')
+
+    // ✅ 실제 Server Action 호출 (모킹 없음)
+    const result = await createTimeSeriesData(initialState, formData)
+    
+    expect(result.success).toBe(true)
+    
+    // ✅ 실제 TimescaleDB에서 확인
+    const saved = await prisma.timeSeriesData.findMany({
+      where: { metric: '__test__cpu_usage' }
+    })
+    expect(saved[0].value).toBe(85.5)
+  })
+})
+```
+
+### 테스트 특징
+
+- **🔄 실제 DB 연동**: 모킹 없이 실제 TimescaleDB 사용
+- **🧹 자동 정리**: `__test__` prefix로 테스트 데이터 구분 및 자동 정리
+- **⚡ 빠른 실행**: Jest + VSCode Jest Runner 확장으로 개별 테스트 실행
+- **🎯 핵심 로직 검증**: Server Actions의 실제 동작 검증
+
+### VSCode에서 테스트 실행
+
+1. **Jest Runner 확장 설치** (추천)
+   - `Ctrl+Shift+X` → "Jest Runner" 검색/설치
+   - 테스트 파일에서 `Run|Debug` 버튼 클릭
+
+2. **터미널에서 실행**
+   ```bash
+   npm run test:integration  # 통합 테스트
+   npm run test:unit        # 단위 테스트 (모킹)
+   npm test                 # 모든 테스트
+   ```
+
+## 🐳 Docker 구성
+
+### 개발 환경
+```bash
+# 인프라만 실행 (TimescaleDB)
+docker-compose up -d
+
+# 애플리케이션은 로컬에서 개발
+npm run dev
+```
+
+### 프로덕션 환경
+```bash
+# 전체 스택 배포 (Next.js 앱 + TimescaleDB)
+docker-compose -f docker-compose.prod.yml up --build
+```
+
+### Docker 파일 구조
+```
+├── Dockerfile                  # Next.js 앱 멀티스테이지 빌드
+├── .dockerignore              # Docker 제외 파일
+├── docker-compose.yml         # 개발용 (인프라만)
+├── docker-compose.prod.yml    # 프로덕션용 (전체 스택)
+└── scripts/
+    ├── healthcheck.js         # 헬스체크 스크립트
+    └── init-db.sql           # TimescaleDB 초기화
+```
+
+## 🛠️ 개발 명령어
 
 ### 기본 명령어
 ```bash
-npm run dev      # 개발 서버
+npm run dev      # 개발 서버 (Turbopack)
 npm run build    # 프로덕션 빌드
+npm run start    # 프로덕션 서버
 npm run lint     # 린트 검사
+```
+
+### 데이터베이스
+```bash
+npx prisma generate                    # 클라이언트 생성
+npx prisma migrate dev --name <name>   # 마이그레이션
+npx prisma studio                      # DB GUI
 ```
 
 ### API 엔드포인트
 ```bash
-GET /api/v1/health    # 헬스체크 (서버 상태 확인)
+GET /api/health    # 헬스체크 (서버 상태 확인)
 ```
 
 ## 📁 폴더 구조 가이드

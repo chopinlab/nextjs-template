@@ -1,0 +1,84 @@
+# 프로덕션용 Docker Compose 설정
+version: '3.8'
+
+services:
+  # Next.js 애플리케이션 (프로덕션)
+  nextjs-app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    ports:
+      - "3000:3000"
+    environment:
+      # Database connection
+      DATABASE_URL: "postgresql://admin:${POSTGRES_PASSWORD}@timescaledb:5432/nextjs_prod"
+      # Next.js settings
+      NODE_ENV: production
+      NEXTAUTH_SECRET: "${NEXTAUTH_SECRET}"
+      NEXTAUTH_URL: "${NEXTAUTH_URL}"
+      # Logging
+      LOG_LEVEL: "warn"
+      LOGGING_ENABLED: "true"
+    depends_on:
+      timescaledb:
+        condition: service_healthy
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "node", "healthcheck.js"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+    # 리소스 제한
+    deploy:
+      resources:
+        limits:
+          memory: 1G
+          cpus: '1.0'
+        reservations:
+          memory: 512M
+          cpus: '0.5'
+
+  # TimescaleDB (프로덕션)
+  timescaledb:
+    image: timescale/timescaledb:2.21.1-pg17
+    environment:
+      POSTGRES_DB: nextjs_prod
+      POSTGRES_USER: admin
+      POSTGRES_PASSWORD: "${POSTGRES_PASSWORD}"
+      # TimescaleDB 최적화 설정 (프로덕션)
+      POSTGRES_INITDB_ARGS: "--data-checksums"
+      TS_TUNE_MEMORY: 4GB
+      TS_TUNE_NUM_CPUS: 4
+    volumes:
+      - timescaledb_prod_data:/var/lib/postgresql/data
+      - ./scripts/init-db.sql:/docker-entrypoint-initdb.d/init-db.sql:ro
+    command: >
+      postgres
+      -c shared_preload_libraries=timescaledb
+      -c max_connections=500
+      -c shared_buffers=1GB
+      -c effective_cache_size=3GB
+      -c work_mem=8MB
+      -c wal_buffers=16MB
+      -c checkpoint_completion_target=0.9
+      -c random_page_cost=1.1
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U admin -d nextjs_prod"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+    # 리소스 제한
+    deploy:
+      resources:
+        limits:
+          memory: 4G
+          cpus: '4.0'
+        reservations:
+          memory: 2G
+          cpus: '2.0'
+
+volumes:
+  timescaledb_prod_data:
+    driver: local
